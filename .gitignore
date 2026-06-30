@@ -21,3 +21,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Node.js Scraper Service
+scraper/node_modules/
+scraper/.env

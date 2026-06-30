@@ -339,3 +339,15 @@
 **Rationale:**
 - We store alance_before, alance_after, and exchange_rate_used directly in wallet_transactions to ensure a perfect immutable audit trail for financial movements.
 
+
+## Exchange Rate Scraper
+
+Exchange rates are scraped using a standalone Node.js service.
+
+Reason:
+- Requirement prohibits exchange-rate APIs.
+- Keeps scraping logic outside Laravel.
+- Laravel remains the only application allowed to write to the database.
+- Communication uses an authenticated internal HTTP endpoint (/api/system/exchange-rates).
+- Axios + Cheerio is chosen over Puppeteer for efficiency as the target pages do not require complex JavaScript rendering.
+- Scheduling is centralized in Laravel (via Artisan Scheduler triggering the Node script).
