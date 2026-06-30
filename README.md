@@ -1,66 +1,88 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Multi-Tenant P2P Crowdfunding Platform 🚀
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is a Senior-level implementation of a White-label Multi-tenant P2P Crowdfunding Platform, built with Laravel 11 and Node.js.
 
-## About Laravel
+## High-Level Architecture
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```mermaid
+graph TD
+    Investor[Investor / Agent] -->|API Request| Gateway(Central API / Tenant Middleware)
+    Gateway -->|Domain: domain.com| CentralDB[(Central Database)]
+    Gateway -->|Domain: tenant.domain.com| TenantDB[(Tenant Database)]
+    
+    subgraph Central Layer
+        CentralDB
+        WalletService
+        ExchangeRateService
+    end
+    
+    subgraph Tenant Layer
+        TenantDB
+        InvestmentService
+        CommissionService
+    end
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+    InvestmentService -->|Cross-DB Comm| WalletService
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Architectural Highlights
+- **Strict Multi-Tenancy**: The application is split into two physical data domains:
+  - **Central Database**: Holds `Users` (Investors/Agents), `Wallets`, `Currencies`, and `ExchangeRates`.
+  - **Tenant Databases**: Holds `Projects`, `Investments`, `Commissions`, `Admins`, and `Issuers`.
+- **Absolute Precision**: Financial columns use `BIGINT` (minor units) rather than `DECIMAL` to guarantee zero floating-point loss.
+- **Pessimistic Locking**: Prevents concurrent request race conditions that could lead to wallet overdrafts using `DB::transaction()` and `lockForUpdate()`.
+- **Immutable Audit Trails**: Wallet balances rely on an append-only `wallet_transactions` ledger with exact `balance_before` and `balance_after` snapshots.
+- **Decoupled Microservice**: Exchange rates are fetched using a standalone Node.js scraper, honoring the separation of concerns.
 
-## Learning Laravel
+*(For detailed architectural reasoning, please refer to [DECISIONS.md](DECISIONS.md) and [ERD.md](ERD.md)).*
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Assumptions
+- Exchange rates are scraped at least once daily via the scheduler.
+- Wallet balances are strictly stored in minor units (e.g., cents) based on the currency's decimal configuration.
+- One investor has exactly one central wallet in their designated Home Currency.
+- One Tenant operates strictly within one designated base currency.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Known Limitations
+- **Distributed Transactions**: Cross-database operations (between Central DB and Tenant DB) currently rely on compensation logic and application-level orchestration rather than true two-phase commit (2PC) atomicity. For massive production scale, a **Saga Pattern** or Event-Driven Architecture should be adopted to handle cross-DB rollbacks.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Future Improvements
+- **Message Broker (Kafka / RabbitMQ)**: Offload heavy cross-DB Commission distribution to an event bus.
+- **Observability**: Implement Prometheus metrics & Grafana tracing to monitor investment lock periods and scraper latencies.
+- **Redis Queues**: Transition `UnlockInvestmentsJob` to a distributed queue system for faster parallel execution of daily maturities.
 
-## Laravel Sponsors
+## Setup Instructions
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Prerequisites
+- PHP 8.3+
+- Node.js 18+
+- PostgreSQL or MySQL (PostgreSQL recommended for robust locking mechanisms)
+- Composer & NPM
 
-### Premium Partners
+### 2. Environment Setup
+1. Copy `.env.example` to `.env`.
+2. Configure your Central DB in `.env`.
+3. Set your internal secret: `SYSTEM_API_KEY=your-secure-secret`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 3. Database Migrations
+Because of the multi-tenant architecture, migrations are split:
+```bash
+# 1. Migrate the Central Database
+php artisan migrate
 
-## Contributing
+# 2. Migrate the Tenant Databases
+php artisan migrate --path=database/migrations/tenant --database=tenant
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Running the Exchange Rate Scraper
+```bash
+cd scraper
+npm install
+cd ..
+php artisan scraper:run
+```
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5. Running the Test Suite
+The business-critical logic (Service Layer) is heavily tested using PHPUnit.
+```bash
+php artisan test
+```

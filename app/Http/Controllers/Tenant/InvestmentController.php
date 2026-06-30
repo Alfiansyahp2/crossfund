@@ -17,7 +17,7 @@ class InvestmentController extends Controller
         $this->investmentService = $investmentService;
     }
 
-    public function invest(Project $project, InvestRequest $request)
+    public function invest($tenant, Project $project, InvestRequest $request)
     {
         $user = $request->user();
 

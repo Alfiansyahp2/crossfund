@@ -25,3 +25,9 @@ yarn-error.log
 # Node.js Scraper Service
 scraper/node_modules/
 scraper/.env
+
+# Testing & Debug Logs
+.env.testing
+test_results_*.log
+final_test_results.log
+debug_api_test.txt

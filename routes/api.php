@@ -48,6 +48,6 @@ Route::domain('{tenant}.localhost')->middleware(\App\Http\Middleware\TenantMiddl
         Route::post('/projects/{project}/publish', [ProjectController::class, 'publish']);
         
         // Investor Routes (Investors access tenant routes to invest)
-        Route::post('/projects/{project}/invest', [InvestmentController::class, 'invest']);
+        Route::post('/projects/{project}/invest', [InvestmentController::class, 'invest'])->name('tenant.invest');
     });
 });

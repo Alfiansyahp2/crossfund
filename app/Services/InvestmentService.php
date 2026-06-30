@@ -48,8 +48,11 @@ class InvestmentService
                                     ->latest('effective_at')
                                     ->first();
 
-        // For the sake of this test, let's assume a rate of 1.0 if not found, or throw.
-        $rateValue = $exchangeRate ? $exchangeRate->rate : 1.0;
+        if (!$exchangeRate) {
+            throw new Exception("No active exchange rate found.");
+        }
+
+        $rateValue = $exchangeRate->rate;
 
         // 2. Calculate Cost in Home Currency
         // Formula: TenantAmount / Rate = HomeAmount

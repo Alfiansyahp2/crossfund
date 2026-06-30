@@ -18,7 +18,7 @@ class ProjectController extends Controller
         $this->projectService = $projectService;
     }
 
-    public function store(Request $request)
+    public function store($tenant, Request $request)
     {
         // Typically executed by Issuer
         $request->validate([
@@ -40,7 +40,7 @@ class ProjectController extends Controller
         return response()->json($project, 201);
     }
 
-    public function publish(Project $project, PublishProjectRequest $request)
+    public function publish($tenant, Project $project, PublishProjectRequest $request)
     {
         try {
             $publishedProject = $this->projectService->publishProject(
