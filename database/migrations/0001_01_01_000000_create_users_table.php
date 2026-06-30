@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('role')->default('investor'); // investor, agent
+            $table->string('referral_code')->unique()->nullable();
+            $table->foreignId('home_currency_id')->nullable()->constrained('currencies')->nullOnDelete();
+            $table->foreignId('agent_tier_id')->nullable()->constrained('agent_tiers')->nullOnDelete();
+            $table->foreignId('upline_id')->nullable()->constrained('users')->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('currency', 3); // Home currency
-            $table->bigInteger('balance')->default(0); // Stored in minor units (cents)
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('currency_id')->constrained('currencies');
+            $table->bigInteger('balance')->default(0); // minor units
             $table->timestamps();
         });
     }

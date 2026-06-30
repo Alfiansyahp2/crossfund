@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('agent_tiers', function (Blueprint $table) {
+        Schema::create('currencies', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Bronze, Silver, Gold
-            $table->integer('min_downlines')->default(0);
-            $table->decimal('commission_multiplier', 5, 2)->default(1.00);
+            $table->string('code', 3)->unique(); // IDR, USD
+            $table->string('name');
+            $table->integer('decimals')->default(2);
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('agent_tiers');
+        Schema::dropIfExists('currencies');
     }
 };

@@ -319,3 +319,23 @@
 - Database credentials in environment
 - Scraper service URL configurable
 - Queue worker configuration per environment
+
+## 16. Recent Architectural Refinements (Iterative Design)
+
+### Decision: Strict Auth Separation (Central vs Tenant)
+**Rationale:**
+- Central users (Investors/Agents) need one login for everything.
+- Admins and Issuers are strictly bound to their Tenant.
+- Mixing them into one users table causes Spatie Permission nightmares (multi-guard, multi-db relationships).
+- Better to create dmins and issuers tables inside the Tenant DB.
+
+### Decision: Margin Validation in Service Layer
+**Rationale:**
+- The rule 	otal_commissions <= platform_margin happens at publish time.
+- We don't store platform_margin in the DB as it's derived (gross - investor).
+- Validation happens in ProjectPublishingService to keep DB normalized.
+
+### Decision: Audit Trail for Wallets
+**Rationale:**
+- We store alance_before, alance_after, and exchange_rate_used directly in wallet_transactions to ensure a perfect immutable audit trail for financial movements.
+

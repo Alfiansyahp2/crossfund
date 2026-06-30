@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tenants', function (Blueprint $table) {
+        Schema::create('issuers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('subdomain')->unique();
-            $table->string('db_name')->unique();
-            $table->string('currency', 3); // e.g. IDR, SGD
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->string('company_name');
+            $table->string('country');
+            $table->string('kyc_status')->default('pending'); // pending, verified, rejected
             $table->string('status')->default('pending'); // pending, active, suspended
             $table->timestamps();
         });
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tenants');
+        Schema::dropIfExists('issuers');
     }
 };

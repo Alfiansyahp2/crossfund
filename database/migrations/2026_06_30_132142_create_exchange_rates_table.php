@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('exchange_rates', function (Blueprint $table) {
             $table->id();
-            $table->string('from_currency', 3);
-            $table->string('to_currency', 3);
-            $table->decimal('rate', 16, 8); // Exchange rate with high precision
+            $table->foreignId('from_currency_id')->constrained('currencies');
+            $table->foreignId('to_currency_id')->constrained('currencies');
+            $table->decimal('rate', 16, 8);
+            $table->string('source')->nullable();
             $table->timestamp('effective_at');
             $table->timestamps();
-            
-            $table->unique(['from_currency', 'to_currency', 'effective_at']);
         });
     }
 
