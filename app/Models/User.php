@@ -17,11 +17,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -44,5 +40,51 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'home_currency_id');
+    }
+
+    public function agentTier()
+    {
+        return $this->belongsTo(AgentTier::class);
+    }
+
+    public function upline()
+    {
+        return $this->belongsTo(User::class, 'upline_id');
+    }
+
+    public function downlines()
+    {
+        return $this->hasMany(User::class, 'upline_id');
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    public function walletTopups()
+    {
+        return $this->hasMany(WalletTopup::class);
+    }
+
+    public function walletWithdrawals()
+    {
+        return $this->hasMany(WalletWithdrawal::class);
+    }
+
+    // Cross-DB relationships
+    public function investments()
+    {
+        return $this->hasMany(\App\Models\Tenant\Investment::class);
+    }
+
+    public function commissions()
+    {
+        return $this->hasMany(\App\Models\Tenant\Commission::class, 'recipient_user_id');
     }
 }

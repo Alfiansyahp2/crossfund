@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Tenant extends Model
+class WalletTopup extends Model
 {
     protected $guarded = [];
 
-    public function currency()
+    public function user()
     {
-        return $this->belongsTo(Currency::class);
+        return $this->belongsTo(User::class);
     }
 }

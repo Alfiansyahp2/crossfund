@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Tenant extends Model
+class AgentTier extends Model
 {
     protected $guarded = [];
 
-    public function currency()
+    public function users()
     {
-        return $this->belongsTo(Currency::class);
+        return $this->hasMany(User::class);
     }
 }
